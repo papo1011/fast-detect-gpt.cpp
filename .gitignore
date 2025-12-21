@@ -1,0 +1,36 @@
+# IDE
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Build artefacts (CMake / Ninja / Make) ---
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# --- Binary outputs ---
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+*.app
+
+# --- Logs / misc ---
+*.log
+*.tmp
+*.swp
