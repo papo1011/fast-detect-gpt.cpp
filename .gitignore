@@ -34,3 +34,6 @@ Testing/
 *.log
 *.tmp
 *.swp
+
+# --- Project specific ---
+models/

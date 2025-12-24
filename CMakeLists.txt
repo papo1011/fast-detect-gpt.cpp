@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(fast_detect_gpt)
+project(fast-detect-gpt)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -17,6 +17,6 @@ endif ()
 
 add_subdirectory(llama.cpp)
 
-add_executable(fast_detect_gpt main.cpp)
+add_executable(fast-detect-gpt main.cpp)
 
-target_link_libraries(fast_detect_gpt PRIVATE llama)
+target_link_libraries(fast-detect-gpt PRIVATE llama)
