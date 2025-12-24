@@ -53,28 +53,51 @@ int main(const int argc, char * argv[]) {
     // size: input text length + 2 for BOS and EOS
     std::vector<llama_token> tokens(input_text.length() + 2);
 
-    auto ntokens =
+    auto n_tokens =
         llama_tokenize(llama.vocab, input_text.c_str(), input_text.length(), tokens.data(), tokens.size(), true, false);
 
-    if (ntokens < 0) {
-        ntokens = -ntokens;
-        tokens.resize(ntokens);
-        ntokens = llama_tokenize(llama.vocab, input_text.c_str(), input_text.length(), tokens.data(), tokens.size(),
-                                 true, false);
+    if (n_tokens < 0) {
+        n_tokens = -n_tokens;
+        tokens.resize(n_tokens);
+        n_tokens = llama_tokenize(llama.vocab, input_text.c_str(), input_text.length(), tokens.data(), tokens.size(),
+                                  true, false);
     }
-    tokens.resize(ntokens);
+    tokens.resize(n_tokens);
 
-    if (ntokens < 2) {
+    if (n_tokens < 2) {
         std::cerr << "Not enough tokens provided (minimum 2 tokens)" << std::endl;
         return 1;
     }
 
     // TODO: add cli flag to set ctx size
-    if (ntokens > 4096) {
+    if (n_tokens > 4096) {
         std::cerr << "Too many tokens provided (maximum 4096 tokens)" << std::endl;
         return 1;
     }
 
+    auto batch = llama_batch_init(n_tokens, 0, 1);
+    for (int i = 0; i < n_tokens; i++) {
+        batch.token[i]     = tokens[i];
+        batch.pos[i]       = i;
+        batch.n_seq_id[i]  = 1;
+        batch.seq_id[i][0] = 0;
+        batch.logits[i]    = true;
+    }
+
+    if (llama_decode(llama.ctx, batch) != 0) {
+        std::cerr << "Inference failed" << std::endl;
+        llama_batch_free(batch);
+        return 1;
+    }
+
+    std::vector<float *> logits_ptrs;
+    logits_ptrs.reserve(n_tokens);  // reserve space avoiding reallocations
+
+    for (int i = 0; i < n_tokens; i++) {
+        logits_ptrs.push_back(llama_get_logits_ith(llama.ctx, i));
+    }
+
+    llama_batch_free(batch);
     llama_backend_free();
     return 0;
 }
