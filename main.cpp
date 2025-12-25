@@ -1,7 +1,56 @@
 #include "llama.h"
 
+#include <math.h>
+
 #include <iostream>
 #include <vector>
+
+struct TokenStats {
+    double log_likelihood;
+    double mean;
+    double variance;
+};
+
+TokenStats compute_token_stats(const int             vocab_size,
+                               const int             token_id,
+                               const float *         logits,
+                               std::vector<double> & buffer) {
+    float max_logit = -1e9;
+    for (int i = 0; i < vocab_size; i++) {
+        if (logits[i] > max_logit) {
+            max_logit = logits[i];
+        }
+    }
+
+    double sum_exp = 0.0;
+    for (int i = 0; i < vocab_size; i++) {
+        buffer[i] = std::exp(logits[i] - max_logit);
+        sum_exp += buffer[i];
+    }
+    double log_sum_exp = std::log(sum_exp);
+
+    TokenStats stats = { 0.0, 0.0, 0.0 };
+
+    if (token_id >= 0 && token_id < vocab_size) {
+        stats.log_likelihood = (logits[token_id] - max_logit) - log_sum_exp;
+    }
+
+    double mean            = 0.0;  // E[X]
+    double expected_square = 0.0;  // E[X^2]
+
+    for (int i = 0; i < vocab_size; i++) {
+        double p  = buffer[i] / sum_exp;
+        double lp = (logits[i] - max_logit) - log_sum_exp;
+
+        mean += p * lp;
+        expected_square += p * (lp * lp);
+    }
+
+    stats.mean     = mean;
+    stats.variance = expected_square - (mean * mean);  // E[X^2] - (E[X])^2
+
+    return stats;
+}
 
 struct LlamaState {
     llama_model *       model;
