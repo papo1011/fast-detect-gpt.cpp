@@ -38,3 +38,4 @@ Testing/
 # --- Project specific ---
 models/
 inputs/
+.env
