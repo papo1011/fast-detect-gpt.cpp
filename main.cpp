@@ -1,7 +1,8 @@
 #include "llama.h"
 
-#include <math.h>
-
+#include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -111,6 +112,17 @@ bool setup_llama(LlamaState & llama, const std::string & model_path) {
     return (llama.ctx != nullptr);
 }
 
+static bool read_file_to_string(const std::string & path, std::string & out) {
+    std::ifstream in(path, std::ios::in | std::ios::binary);
+    if (!in) {
+        return false;
+    }
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    out = ss.str();
+    return true;
+}
+
 int main(const int argc, char * argv[]) {
     if (argc < 3) {
         std::cerr << "How to use: ./fast-detect-gpt <model_path> <input_file>" << std::endl;
@@ -118,11 +130,22 @@ int main(const int argc, char * argv[]) {
     }
 
     const std::string model_path = argv[1];
-    std::string       input_text = argv[2];
+    const std::string input_file = argv[2];
+
+    if (!std::filesystem::exists(input_file) || !std::filesystem::is_regular_file(input_file)) {
+        std::cerr << "Input must be an existing regular file: " << input_file << std::endl;
+        return 1;
+    }
+
+    std::string input_text;
+    if (!read_file_to_string(input_file, input_text)) {
+        std::cerr << "Failed to read input file: " << input_file << std::endl;
+        return 1;
+    }
 
     llama_backend_init();
 
-    LlamaState llama;
+    LlamaState llama = {};
     if (!setup_llama(llama, model_path)) {
         std::cerr << "Failed to load model from " << model_path << std::endl;
         return 1;
@@ -156,6 +179,7 @@ int main(const int argc, char * argv[]) {
 
     auto batch = llama_batch_init(n_tokens, 0, 1);
     for (int i = 0; i < n_tokens; i++) {
+        batch.n_tokens     = n_tokens;
         batch.token[i]     = tokens[i];
         batch.pos[i]       = i;
         batch.n_seq_id[i]  = 1;

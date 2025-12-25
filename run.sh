@@ -1,11 +1,13 @@
 EXE_NAME="fast-detect-gpt"
 MODEL_NAME="Qwen2.5-Coder-7B-Instruct-Q3_K_M.gguf"
-INPUT_TEXT="Try to detect this :)"
+INPUT_FILE="Qwen2.5-Coder-7B-Instruct.py"
 
 MODEL_DIR="models"
 BUILD_DIR="cmake-build-debug"
+INPUT_DIR="inputs"
 
 EXECUTABLE="./$BUILD_DIR/$EXE_NAME"
 MODEL_PATH="./$MODEL_DIR/$MODEL_NAME"
+INPUT_PATH="./$INPUT_DIR/$INPUT_FILE"
 
-$EXECUTABLE "$MODEL_PATH" "$INPUT_TEXT"
+$EXECUTABLE "$MODEL_PATH" "$INPUT_PATH"
