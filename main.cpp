@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
@@ -52,6 +53,35 @@ TokenStats compute_token_stats(const int             vocab_size,
     return stats;
 }
 
+double compute_discrepancy(const std::vector<float *> &     all_logits,
+                           const std::vector<llama_token> & tokens,
+                           int                              vocab_size) {
+    double sum_ll   = 0.0;
+    double sum_mean = 0.0;
+    double sum_var  = 0.0;
+
+    std::vector<double> buffer(vocab_size);
+
+    const size_t steps = tokens.size() - 1;
+
+    for (size_t t = 0; t < steps; t++) {
+        const int     token_id = tokens[t + 1];
+        const float * logits   = all_logits[t];
+
+        auto [log_likelihood, mean, variance] = compute_token_stats(vocab_size, token_id, logits, buffer);
+
+        sum_ll += log_likelihood;
+        sum_mean += mean;
+        sum_var += variance;
+    }
+
+    if (sum_var <= 1e-9) {
+        return 0.0;
+    }
+
+    return (sum_ll - sum_mean) / std::sqrt(sum_var);
+}
+
 struct LlamaState {
     llama_model *       model;
     const llama_vocab * vocab;
@@ -83,7 +113,7 @@ bool setup_llama(LlamaState & llama, const std::string & model_path) {
 
 int main(const int argc, char * argv[]) {
     if (argc < 3) {
-        std::cerr << "How to use: ./fast-detect-gpt <model_path> \"Input Text\"" << std::endl;
+        std::cerr << "How to use: ./fast-detect-gpt <model_path> <input_file>" << std::endl;
         return 1;
     }
 
@@ -146,7 +176,14 @@ int main(const int argc, char * argv[]) {
         logits_ptrs.push_back(llama_get_logits_ith(llama.ctx, i));
     }
 
+    const int    vocab_size  = llama_vocab_n_tokens(llama.vocab);
+    const double discrepancy = compute_discrepancy(logits_ptrs, tokens, vocab_size);
+
+    std::cout << " DISCREPANCY: " << std::fixed << std::setprecision(4) << discrepancy << std::endl;
+
     llama_batch_free(batch);
+    llama_free(llama.ctx);
+    llama_model_free(llama.model);
     llama_backend_free();
     return 0;
 }
