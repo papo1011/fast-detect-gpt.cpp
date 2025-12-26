@@ -1,5 +1,5 @@
 EXE_NAME="fast-detect-gpt"
-BUILD_DIR="cmake-build-debug"
+BUILD_DIR="build"
 MODEL_DIR="models"
 INPUT_DIR="inputs"
 
