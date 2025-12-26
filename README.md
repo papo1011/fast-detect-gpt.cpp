@@ -12,12 +12,17 @@ It is a 200 lines wrapper around llama.cpp to enable detection of AI generated t
 If you want to dig into the details of how it works, read the fast detect gpt paper
 [![arXiv](https://img.shields.io/badge/arXiv-2310.05130-b31b1b.svg)](https://arxiv.org/abs/2310.05130)
 
+The original [paper implementation](https://github.com/baoguangsheng/fast-detect-gpt) uses PyTorch for inference, this
+project instead uses llama.cpp that leverages CPU for faster performance on consumer hardware.
+
 This implementation follows the analytic Fast DetectGPT approach, which optimizes detection speed by utilizing a
 singular model for both sampling and scoring. Unlike previous methods (DetectGPT) that required separate steps or
 models,
 this approach combines the processes, necessitating only one model call per check.
 The core metric is the Conditional Probability Curvature, defined as:
+
 $$d(x, p_\theta) = \frac{\log p_\theta(x) - \tilde{\mu}}{\tilde{\sigma}}$$
+
 Where:
 
 - $x$ -> The original input token
@@ -42,6 +47,21 @@ distinguishing between human and AI written text with high accuracy and minimal 
 ### How to compile
 
 ```bash
-   cmake .
+   cmake -B build .
    cmake --build ./build --target fast-detect-gpt -j 6
 ```
+
+### How to use
+
+- create a .env file (you can use .env.sample as a template)
+- Optional, if you don't have a model yet:
+    - get your huggingface token and set it in the .env file (https://huggingface.co/docs/hub/en/security-tokens)
+    - select the model huggingface url path in the .env file (default is for falcon-7b-instruct, suggested in the paper)
+- If you have a model already downloaded, move it to the models/ folder or symlink it there, then set MODEL_NAME in the
+  .env
+  file to the folder name of the model
+- move your input text file to the inputs/ folder and set INPUT_FILE in the .env file to the file name
+- run:
+- ```bash
+  bash ./run.sh
+  ```
