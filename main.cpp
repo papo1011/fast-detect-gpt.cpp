@@ -1,5 +1,6 @@
 #include "llama.h"
 
+#include <argparse/argparse.hpp>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -89,11 +90,11 @@ struct LlamaState {
     llama_context *     ctx;
 };
 
-bool setup_llama(LlamaState & llama, const std::string & model_path) {
+bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx) {
     auto mparams         = llama_model_default_params();
-    mparams.n_gpu_layers = 200;  // if possible load all layers to GPU
+    // TODO: enable GPU support
+    mparams.n_gpu_layers = 0;  // use CPU only for the moment
 
-    // Load the model from disk to memory
     llama.model = llama_model_load_from_file(model_path.c_str(), mparams);
     if (!llama.model) {
         return false;
@@ -101,11 +102,9 @@ bool setup_llama(LlamaState & llama, const std::string & model_path) {
 
     llama.vocab = llama_model_get_vocab(llama.model);
 
-    auto cparams    = llama_context_default_params();
-    // TODO: add a cli flag to set these values
-    cparams.n_ctx   = 4096;
-    cparams.n_batch = 4096;
-
+    auto cparams       = llama_context_default_params();
+    cparams.n_ctx      = n_ctx;
+    cparams.n_batch    = n_ctx;
     cparams.embeddings = true;
 
     llama.ctx = llama_init_from_model(llama.model, cparams);
@@ -123,14 +122,26 @@ static bool read_file_to_string(const std::string & path, std::string & out) {
     return true;
 }
 
-int main(const int argc, char * argv[]) {
-    if (argc < 3) {
-        std::cerr << "How to use: ./fast-detect-gpt <model_path> <input_file>" << std::endl;
+int main(int argc, char * argv[]) {
+    argparse::ArgumentParser program("fast-detect-gpt", "0.1.0");
+
+    program.add_argument("-m", "--model").help("Path to the GGUF model file").required();
+
+    program.add_argument("-f", "--file").help("Path to the input text file").required();
+
+    program.add_argument("-c", "--ctx").help("Size of the prompt context").default_value(4096).scan<'i', int>();
+
+    try {
+        program.parse_args(argc, argv);
+    } catch (const std::exception & err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
         return 1;
     }
 
-    const std::string model_path = argv[1];
-    const std::string input_file = argv[2];
+    std::string model_path   = program.get<std::string>("--model");
+    std::string input_file   = program.get<std::string>("--file");
+    int         n_ctx_size   = program.get<int>("--ctx");
 
     if (!std::filesystem::exists(input_file) || !std::filesystem::is_regular_file(input_file)) {
         std::cerr << "Input must be an existing regular file: " << input_file << std::endl;
@@ -146,7 +157,7 @@ int main(const int argc, char * argv[]) {
     llama_backend_init();
 
     LlamaState llama = {};
-    if (!setup_llama(llama, model_path)) {
+    if (!setup_llama(llama, model_path, n_ctx_size)) {
         std::cerr << "Failed to load model from " << model_path << std::endl;
         return 1;
     }
@@ -171,9 +182,8 @@ int main(const int argc, char * argv[]) {
         return 1;
     }
 
-    // TODO: add cli flag to set ctx size
-    if (n_tokens > 4096) {
-        std::cerr << "Too many tokens provided (maximum 4096 tokens)" << std::endl;
+    if (n_tokens > n_ctx_size) {
+        std::cerr << "Too many tokens provided: " << n_tokens << " (maximum " << n_ctx_size << ")" << std::endl;
         return 1;
     }
 
@@ -209,5 +219,6 @@ int main(const int argc, char * argv[]) {
     llama_free(llama.ctx);
     llama_model_free(llama.model);
     llama_backend_free();
+
     return 0;
 }

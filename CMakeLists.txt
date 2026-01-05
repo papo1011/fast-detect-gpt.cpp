@@ -12,6 +12,16 @@ set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(llama.cpp)
 
+include(FetchContent)
+
+FetchContent_Declare(
+        argparse
+        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
+        GIT_TAG v3.2
+)
+
+FetchContent_MakeAvailable(argparse)
+
 add_executable(fast-detect-gpt main.cpp)
 
-target_link_libraries(fast-detect-gpt PRIVATE llama)
+target_link_libraries(fast-detect-gpt PRIVATE llama argparse::argparse)
