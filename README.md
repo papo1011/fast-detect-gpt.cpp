@@ -44,6 +44,12 @@ its analytical expectation ($\tilde{\mu}$, representing the negative entropy) by
 deviation $\tilde{\sigma}$. This renders the metric a robust and deterministic zero shot detector, capable of
 distinguishing between human and AI written text with high accuracy and minimal latency.
 
+### How to install
+
+```bash
+    git clone --recurse-submodules https://github.com/papo1011/fast-detect-gpt.cpp.git
+```
+
 ### How to compile
 
 ```bash
