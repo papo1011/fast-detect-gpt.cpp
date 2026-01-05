@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(fast-detect-gpt)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -22,6 +22,11 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(argparse)
 
-add_executable(fast-detect-gpt main.cpp)
+add_executable(fast-detect-gpt src/main.cpp
+        src/detect.cpp
+        src/utils.cpp
+        include/detect.h
+        include/utils.h
+)
 
 target_link_libraries(fast-detect-gpt PRIVATE llama argparse::argparse)
