@@ -90,7 +90,7 @@ struct LlamaState {
     llama_context *     ctx;
 };
 
-bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx) {
+bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch) {
     auto mparams         = llama_model_default_params();
     // TODO: enable GPU support
     mparams.n_gpu_layers = 0;  // use CPU only for the moment
@@ -104,7 +104,7 @@ bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx) 
 
     auto cparams       = llama_context_default_params();
     cparams.n_ctx      = n_ctx;
-    cparams.n_batch    = n_ctx;
+    cparams.n_batch    = n_batch;
     cparams.embeddings = true;
 
     llama.ctx = llama_init_from_model(llama.model, cparams);
@@ -131,6 +131,8 @@ int main(int argc, char * argv[]) {
 
     program.add_argument("-c", "--ctx").help("Size of the prompt context").default_value(4096).scan<'i', int>();
 
+    program.add_argument("-b", "--batch").help("Logical maximum batch size for inference").default_value(4096).scan<'i', int>();
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception & err) {
@@ -141,7 +143,8 @@ int main(int argc, char * argv[]) {
 
     std::string model_path   = program.get<std::string>("--model");
     std::string input_file   = program.get<std::string>("--file");
-    int         n_ctx_size   = program.get<int>("--ctx");
+    int         n_ctx   = program.get<int>("--ctx");
+    int         n_batch = program.get<int>("--batch");
 
     if (!std::filesystem::exists(input_file) || !std::filesystem::is_regular_file(input_file)) {
         std::cerr << "Input must be an existing regular file: " << input_file << std::endl;
@@ -157,7 +160,7 @@ int main(int argc, char * argv[]) {
     llama_backend_init();
 
     LlamaState llama = {};
-    if (!setup_llama(llama, model_path, n_ctx_size)) {
+    if (!setup_llama(llama, model_path, n_ctx, n_batch)) {
         std::cerr << "Failed to load model from " << model_path << std::endl;
         return 1;
     }
@@ -182,8 +185,8 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
-    if (n_tokens > n_ctx_size) {
-        std::cerr << "Too many tokens provided: " << n_tokens << " (maximum " << n_ctx_size << ")" << std::endl;
+    if (n_tokens > n_ctx) {
+        std::cerr << "Too many tokens provided: " << n_tokens << " (maximum " << n_ctx << ")" << std::endl;
         return 1;
     }
 
