@@ -44,6 +44,8 @@ int main(const int argc, char * argv[]) {
         llama_log_set(custom_log, nullptr);
     }
 
+    std::cout << "Loading model..." << std::endl;
+
     llama_backend_init();
 
     LlamaState llama = {};
@@ -87,6 +89,8 @@ int main(const int argc, char * argv[]) {
         batch.logits[i]    = true;
     }
 
+    std::cout << "Running inference on " << n_tokens << " tokens..." << std::endl;
+
     if (llama_decode(llama.ctx, batch) != 0) {
         std::cerr << "Inference failed" << std::endl;
         llama_batch_free(batch);
@@ -103,7 +107,7 @@ int main(const int argc, char * argv[]) {
     const int    vocab_size  = llama_vocab_n_tokens(llama.vocab);
     const double discrepancy = compute_discrepancy(logits_ptrs, tokens, vocab_size);
 
-    std::cout << " DISCREPANCY: " << std::fixed << std::setprecision(4) << discrepancy << std::endl;
+    std::cout << "DISCREPANCY: " << std::fixed << std::setprecision(4) << discrepancy << std::endl;
 
     llama_batch_free(batch);
     llama_free(llama.ctx);
