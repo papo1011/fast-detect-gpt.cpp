@@ -5,6 +5,8 @@
 int main(const int argc, char * argv[]) {
     argparse::ArgumentParser program("fast-detect-gpt", "0.1.0");
 
+    program.add_argument("-v", "--verbose").help("Verbosity level").default_value(false);
+
     program.add_argument("-m", "--model").help("Path to the GGUF model file").required();
 
     program.add_argument("-f", "--file").help("Path to the input text file").required();
@@ -21,6 +23,7 @@ int main(const int argc, char * argv[]) {
         return 1;
     }
 
+    const bool verbose = program.get<bool>("--verbose");
     const auto model_path   = program.get<std::string>("--model");
     const auto input_file   = program.get<std::string>("--file");
     const int         n_ctx   = program.get<int>("--ctx");
@@ -35,6 +38,10 @@ int main(const int argc, char * argv[]) {
     if (!read_file_to_string(input_file, input_text)) {
         std::cerr << "Failed to read input file: " << input_file << std::endl;
         return 1;
+    }
+
+    if (!verbose) {
+        llama_log_set(custom_log, nullptr);
     }
 
     llama_backend_init();

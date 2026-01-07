@@ -1,5 +1,6 @@
 #include "../include/utils.h"
 #include <fstream>
+#include <sstream>
 
 bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch) {
     auto mparams         = llama_model_default_params();
@@ -31,4 +32,10 @@ bool read_file_to_string(const std::string & path, std::string & out) {
     ss << in.rdbuf();
     out = ss.str();
     return true;
+}
+
+void custom_log(ggml_log_level level, const char * text, void * user_data) {
+    if (level == GGML_LOG_LEVEL_ERROR) {
+        fprintf(stderr, "%s", text);
+    }
 }
