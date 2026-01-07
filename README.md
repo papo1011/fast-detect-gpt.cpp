@@ -69,5 +69,5 @@ cmake --build ./build --target fast-detect-gpt -j 6
 - move your input text file to the inputs/ folder and set INPUT_FILE in the .env file to the file name
 - run:
 - ```bash
-bash ./run.sh
+  bash ./run.sh
   ```
