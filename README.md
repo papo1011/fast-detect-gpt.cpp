@@ -1,9 +1,9 @@
 ```bash
-███████  █████  ███████ ████████    ██████  ███████ ████████ ███████  ██████ ████████     ██████  ██████ ████████
-██      ██   ██ ██         ██       ██   ██ ██         ██    ██      ██         ██       ██       ██  ██    ██
-█████   ███████ ███████    ██       ██   ██ █████      ██    █████   ██         ██       ██   ███ ██████    ██
-██      ██   ██      ██    ██       ██   ██ ██         ██    ██      ██         ██       ██    ██ ██        ██
-██      ██   ██ ███████    ██       ██████  ███████    ██    ███████  ██████    ██        ██████  ██        ██
+██████ ████  █████ ██████    █████  █████ ██████ █████ ████ ██████    █████   ██████ ██████
+██    ██  ██ ██      ██      ██  ██ ██      ██   ██   ██      ██     ██       ██  ██   ██
+████  ██████ █████   ██      ██  ██ ████    ██   ████ ██      ██     ██   ███ ██████   ██
+██    ██  ██    ██   ██      ██  ██ ██      ██   ██   ██      ██     ██    ██ ██       ██
+██    ██  ██ █████   ██      █████  █████   ██   █████ ████   ██      █████   ██       ██
 ```
 
 # What is fast-detect-gpt.cpp?
@@ -47,14 +47,14 @@ distinguishing between human and AI written text with high accuracy and minimal 
 ### How to install
 
 ```bash
-    git clone --recurse-submodules https://github.com/papo1011/fast-detect-gpt.cpp.git
+git clone --recurse-submodules https://github.com/papo1011/fast-detect-gpt.cpp.git
 ```
 
 ### How to compile
 
 ```bash
-   cmake -B build .
-   cmake --build ./build --target fast-detect-gpt -j 6
+cmake -B build .
+cmake --build ./build --target fast-detect-gpt -j 6
 ```
 
 ### How to use
@@ -69,5 +69,5 @@ distinguishing between human and AI written text with high accuracy and minimal 
 - move your input text file to the inputs/ folder and set INPUT_FILE in the .env file to the file name
 - run:
 - ```bash
-  bash ./run.sh
+bash ./run.sh
   ```

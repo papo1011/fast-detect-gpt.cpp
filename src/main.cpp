@@ -3,6 +3,8 @@
 #include "../include/utils.h"
 
 int main(const int argc, char * argv[]) {
+    print_logo();
+
     argparse::ArgumentParser program("fast-detect-gpt", "0.1.0");
 
     program.add_argument("-v", "--verbose").help("Verbosity level").default_value(false);

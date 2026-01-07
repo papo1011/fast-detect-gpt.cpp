@@ -1,6 +1,7 @@
 #include "../include/utils.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch) {
     auto mparams         = llama_model_default_params();
@@ -38,4 +39,15 @@ void custom_log(ggml_log_level level, const char * text, void * user_data) {
     if (level == GGML_LOG_LEVEL_ERROR) {
         fprintf(stderr, "%s", text);
     }
+}
+
+void print_logo() {
+    const std::string logo = R"(
+██████ ████  █████ ██████    █████  █████ ██████ █████ ████ ██████    █████   ██████ ██████
+██    ██  ██ ██      ██      ██  ██ ██      ██   ██   ██      ██     ██       ██  ██   ██
+████  ██████ █████   ██      ██  ██ ████    ██   ████ ██      ██     ██   ███ ██████   ██
+██    ██  ██    ██   ██      ██  ██ ██      ██   ██   ██      ██     ██    ██ ██       ██
+██    ██  ██ █████   ██      █████  █████   ██   █████ ████   ██      █████   ██       ██
+    )";
+    std::cout << "\033[36m" << logo << "\033[0m" << std::endl;
 }

@@ -15,3 +15,5 @@ bool setup_llama(LlamaState& llama, const std::string& model_path, int n_ctx, in
 
 // Custom logging callback that only print errors
 void custom_log(ggml_log_level level, const char * text, void * user_data);
+
+void print_logo();
