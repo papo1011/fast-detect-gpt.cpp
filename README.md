@@ -8,7 +8,7 @@
 
 # What is fast-detect-gpt.cpp?
 
-It is a 200 lines wrapper around llama.cpp to enable detection of AI generated text.
+It is a lightweight CLI app that leverages llama.cpp to enable detection of AI generated text.
 If you want to dig into the details of how it works, read the fast detect gpt paper
 [![arXiv](https://img.shields.io/badge/arXiv-2310.05130-b31b1b.svg)](https://arxiv.org/abs/2310.05130)
 
@@ -46,7 +46,7 @@ distinguishing between human and AI written text with high accuracy and minimal 
 
 ### Before building
 
-**Next 2 steps are required**
+Next 2 steps are **required!!**
 
 - [install llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/docs/install.md)
 - [install arrow](https://arrow.apache.org/install/) (in order to use parquet file as input)
