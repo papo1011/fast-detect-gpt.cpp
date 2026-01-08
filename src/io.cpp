@@ -22,7 +22,7 @@ bool read_file_to_string(const std::string & path, std::string & out) {
 std::pair<std::shared_ptr<arrow::Table>, std::vector<std::string>> load_parquet_and_get_text(
     const std::string & path,
     const std::string & col_name) {
-        std::vector<std::string> texts;
+    std::vector<std::string> texts;
     arrow::MemoryPool *      pool = arrow::default_memory_pool();
 
     auto result_open = arrow::io::ReadableFile::Open(path);
