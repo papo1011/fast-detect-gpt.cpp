@@ -1,4 +1,5 @@
 #include "../include/detect.h"
+#include "../include/io.h"
 #include "../include/utils.h"
 
 #include <argparse/argparse.hpp>

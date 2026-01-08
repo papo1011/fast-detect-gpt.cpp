@@ -1,6 +1,5 @@
 #include "../include/utils.h"
-#include <fstream>
-#include <sstream>
+
 #include <iostream>
 
 bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch) {
@@ -22,17 +21,6 @@ bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, 
 
     llama.ctx = llama_init_from_model(llama.model, cparams);
     return (llama.ctx != nullptr);
-}
-
-bool read_file_to_string(const std::string & path, std::string & out) {
-    std::ifstream in(path, std::ios::in | std::ios::binary);
-    if (!in) {
-        return false;
-    }
-    std::ostringstream ss;
-    ss << in.rdbuf();
-    out = ss.str();
-    return true;
 }
 
 void custom_log(ggml_log_level level, const char * text, void * user_data) {
