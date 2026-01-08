@@ -3,9 +3,13 @@
 #include "../include/utils.h"
 
 #include <argparse/argparse.hpp>
+#include <atomic>
+#include <csignal>
 
 int main(const int argc, char * argv[]) {
     print_logo();
+
+    std::signal(SIGINT, signal_handler);
 
     argparse::ArgumentParser program("fast-detect-gpt", "0.1.0");
 
@@ -75,6 +79,11 @@ int main(const int argc, char * argv[]) {
         scores.reserve(texts.size());
 
         for (size_t i = 0; i < texts.size(); ++i) {
+            if (g_interrupted) {
+                std::cout << "\nProcess interrupted by user at row " << i << std::endl;
+                break;
+            }
+
             std::cout << "--------------------------------" << std::endl;
             std::cout << "Processing row " << i + 1 << std::endl;
 
@@ -82,14 +91,26 @@ int main(const int argc, char * argv[]) {
             std::cout << "DISCREPANCY: " << score << std::endl;
             scores.push_back(score);
         }
+        std::cout << std::endl;
 
-        std::cout << "Saving results to " << output_file << std::endl;
+        if (!scores.empty()) {
+            std::cout << "Saving " << scores.size() << " results to: " << output_file << std::endl;
+            std::shared_ptr<arrow::Table> table_to_save = table;
 
-        if (save_parquet_with_scores(output_file, table, scores)) {
-            std::cout << "Success! Saved " << scores.size() << " rows with scores." << std::endl;
+            if (scores.size() < static_cast<size_t>(table->num_rows())) {
+                std::cout << "Warning: Saving partial results (" << scores.size() << " out of " << table->num_rows()
+                          << " rows)" << std::endl;
+                // Slice(offset, length) create a view without save data
+                table_to_save = table->Slice(0, scores.size());
+            }
+
+            if (save_parquet_with_scores(output_file, table_to_save, scores)) {
+                std::cout << "Success! Saved." << std::endl;
+            } else {
+                std::cerr << "Failed to save output parquet file." << std::endl;
+            }
         } else {
-            std::cerr << "Failed to save parquet file." << std::endl;
-            return 1;
+            std::cout << "No rows processed. Nothing to save." << std::endl;
         }
 
     } else {

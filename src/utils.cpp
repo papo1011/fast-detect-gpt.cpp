@@ -43,3 +43,9 @@ void print_logo() {
     )";
     std::cout << "\033[36m" << logo << "\033[0m" << std::endl;
 }
+
+void signal_handler(const int signum) {
+    std::cout << "\n\nInterrupt signal (" << signum << ") received." << std::endl;
+    std::cout << "Stop inference loop and saving progress!" << std::endl;
+    g_interrupted = true;
+}

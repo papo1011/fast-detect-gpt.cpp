@@ -39,3 +39,4 @@ Testing/
 models/
 inputs/
 .env
+*.parquet

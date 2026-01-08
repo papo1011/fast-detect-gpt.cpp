@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <string>
 
+inline std::atomic<bool> g_interrupted(false);
+
 struct LlamaState {
     llama_model *       model = nullptr;
     const llama_vocab * vocab = nullptr;
@@ -16,3 +18,5 @@ bool setup_llama(LlamaState & llama, const std::string & model_path, bool gpu, i
 void custom_log(ggml_log_level level, const char * text, void * user_data);
 
 void print_logo();
+
+void signal_handler(const int signum);
