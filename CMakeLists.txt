@@ -5,14 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ------ llama.cpp ------
-# Avoid building unnecessary components
-set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(llama.cpp)
-
 include(FetchContent)
 
 # ------ argparse ------
@@ -23,6 +15,9 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(argparse)
+
+# ------ llama.cpp ------
+find_package(llama REQUIRED)
 
 # ------ arrow ------
 find_package(Arrow REQUIRED)
