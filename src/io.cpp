@@ -65,3 +65,61 @@ std::pair<std::shared_ptr<arrow::Table>, std::vector<std::string>> load_parquet_
 
     return { table, texts };
 }
+
+bool save_parquet_with_scores(const std::string &           out_path,
+                              std::shared_ptr<arrow::Table> table,
+                              const std::vector<double> &   scores) {
+    if (!table) {
+        std::cerr << "Error: Input table is null." << std::endl;
+        return false;
+    }
+
+    if (table->num_rows() != static_cast<int64_t>(scores.size())) {
+        std::cerr << "Error: Row count mismatch! Table: " << table->num_rows() << ", Scores: " << scores.size()
+                  << std::endl;
+        return false;
+    }
+
+    arrow::DoubleBuilder builder;
+
+    auto status = builder.AppendValues(scores);
+    if (!status.ok()) {
+        std::cerr << "Error building score array: " << status.ToString() << std::endl;
+        return false;
+    }
+
+    std::shared_ptr<arrow::Array> score_array;
+    status = builder.Finish(&score_array);
+    if (!status.ok()) {
+        std::cerr << "Error finishing score array: " << status.ToString() << std::endl;
+        return false;
+    }
+
+    const auto field = arrow::field("discrepancy", arrow::float64());
+
+    const auto chunked_array = std::make_shared<arrow::ChunkedArray>(score_array);
+
+    auto result_table = table->AddColumn(table->num_columns(), field, chunked_array);
+
+    if (!result_table.ok()) {
+        std::cerr << "Error adding column to table: " << result_table.status().ToString() << std::endl;
+        return false;
+    }
+
+    std::shared_ptr<arrow::Table> new_table     = *result_table;
+    auto                          result_create = arrow::io::FileOutputStream::Open(out_path);
+    if (!result_create.ok()) {
+        std::cerr << "Error creating output file: " << result_create.status().ToString() << std::endl;
+        return false;
+    }
+    const std::shared_ptr<arrow::io::FileOutputStream> outfile = *result_create;
+
+    status = parquet::arrow::WriteTable(*new_table, arrow::default_memory_pool(), outfile, 64 * 1024);
+
+    if (!status.ok()) {
+        std::cerr << "Error writing parquet file: " << status.ToString() << std::endl;
+        return false;
+    }
+
+    return true;
+}

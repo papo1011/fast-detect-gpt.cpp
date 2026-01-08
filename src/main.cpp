@@ -70,20 +70,27 @@ int main(const int argc, char * argv[]) {
             return 1;
         }
 
-        std::cout << "Loaded " << texts.size() << " rows. Starting inference..." << std::endl;
+        std::cout << "Loaded " << texts.size() << " rows. Inference started!" << std::endl;
         std::vector<double> scores;
         scores.reserve(texts.size());
 
         for (size_t i = 0; i < texts.size(); ++i) {
-            if (i % 10 == 0 || i == texts.size() - 1) {
-                std::cout << "\rProcessing row " << i + 1 << "/" << texts.size() << "..." << std::endl;
-            }
+            std::cout << "--------------------------------" << std::endl;
+            std::cout << "Processing row " << i + 1 << std::endl;
 
             double score = analyze_text(llama, texts[i], n_ctx);
             std::cout << "DISCREPANCY: " << score << std::endl;
             scores.push_back(score);
         }
-        std::cout << std::endl;
+
+        std::cout << "Saving results to " << output_file << std::endl;
+
+        if (save_parquet_with_scores(output_file, table, scores)) {
+            std::cout << "Success! Saved " << scores.size() << " rows with scores." << std::endl;
+        } else {
+            std::cerr << "Failed to save parquet file." << std::endl;
+            return 1;
+        }
 
     } else {
         std::cout << "Processing single text file: " << input_file << std::endl;

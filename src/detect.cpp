@@ -111,7 +111,7 @@ double analyze_text(const LlamaState & llama, const std::string & text, const in
         batch.logits[i]    = true;
     }
 
-    std::cout << "Running inference on " << n_tokens << " tokens..." << std::endl;
+    std::cout << "Running inference on " << n_tokens << " tokens" << std::endl;
 
     if (llama_decode(llama.ctx, batch) != 0) {
         std::cerr << "Inference failed" << std::endl;
