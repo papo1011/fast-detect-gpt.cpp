@@ -44,13 +44,14 @@ its analytical expectation ($\tilde{\mu}$, representing the negative entropy) by
 deviation $\tilde{\sigma}$. This renders the metric a robust and deterministic zero shot detector, capable of
 distinguishing between human and AI written text with high accuracy and minimal latency.
 
-### How to install
+### Before building
 
-```bash
-git clone --recurse-submodules https://github.com/papo1011/fast-detect-gpt.cpp.git
-```
+**Next 2 steps are required**
 
-### How to compile
+- [install llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/docs/install.md)
+- [install arrow](https://arrow.apache.org/install/) (in order to use parquet file as input)
+
+### How to build
 
 ```bash
 cmake -B build .
