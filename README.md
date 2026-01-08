@@ -8,12 +8,12 @@
 
 # What is fast-detect-gpt.cpp?
 
-It is a lightweight CLI app that leverages llama.cpp to enable detection of AI generated text.
+It is a lightweight CLI app that uses llama.cpp to enable detection of AI generated text.
 If you want to dig into the details of how it works, read the fast detect gpt paper
 [![arXiv](https://img.shields.io/badge/arXiv-2310.05130-b31b1b.svg)](https://arxiv.org/abs/2310.05130)
 
 The original [paper implementation](https://github.com/baoguangsheng/fast-detect-gpt) uses PyTorch for inference, this
-project instead uses llama.cpp that leverages CPU for faster performance on consumer hardware.
+project instead uses llama.cpp that leverages standard consumer hardware for faster performance on consumer hardware.
 
 This implementation follows the analytic Fast DetectGPT approach, which optimizes detection speed by utilizing a
 singular model for both sampling and scoring. Unlike previous methods (DetectGPT) that required separate steps or

@@ -10,7 +10,7 @@ struct LlamaState {
     llama_context *     ctx   = nullptr;
 };
 
-bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch);
+bool setup_llama(LlamaState & llama, const std::string & model_path, bool gpu, int n_ctx, int n_batch);
 
 // Custom logging callback that only print errors
 void custom_log(ggml_log_level level, const char * text, void * user_data);

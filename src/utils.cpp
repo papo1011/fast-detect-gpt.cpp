@@ -2,10 +2,14 @@
 
 #include <iostream>
 
-bool setup_llama(LlamaState & llama, const std::string & model_path, int n_ctx, int n_batch) {
-    auto mparams         = llama_model_default_params();
-    // TODO: enable GPU support
-    mparams.n_gpu_layers = 0;  // use CPU only for the moment
+bool setup_llama(LlamaState & llama, const std::string & model_path, bool gpu, int n_ctx, int n_batch) {
+    auto mparams = llama_model_default_params();
+
+    if (gpu) {
+        mparams.n_gpu_layers = 200;  // enable GPU
+    } else {
+        mparams.n_gpu_layers = 0;
+    }
 
     llama.model = llama_model_load_from_file(model_path.c_str(), mparams);
     if (!llama.model) {

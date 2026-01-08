@@ -9,7 +9,8 @@ int main(const int argc, char * argv[]) {
 
     argparse::ArgumentParser program("fast-detect-gpt", "0.1.0");
 
-    program.add_argument("-v", "--verbose").help("Verbosity level").default_value(false).implicit_value(true);
+    program.add_argument("--verbose").help("Verbosity level").default_value(false).implicit_value(true);
+    program.add_argument("--gpu").help("Enable GPU acceleration").default_value(false).implicit_value(true);
     program.add_argument("-m", "--model").help("Path to the GGUF model file").required();
     program.add_argument("-f", "--file").help("Path to the input file (txt or parquet)").required();
     program.add_argument("-c", "--ctx").help("Size of the prompt context").default_value(4096).scan<'i', int>();
@@ -30,6 +31,7 @@ int main(const int argc, char * argv[]) {
     }
 
     const bool verbose     = program.get<bool>("--verbose");
+    const bool gpu         = program.get<bool>("--gpu");
     const auto model_path  = program.get<std::string>("--model");
     const auto input_file  = program.get<std::string>("--file");
     const auto col_name    = program.get<std::string>("--col");
@@ -51,7 +53,7 @@ int main(const int argc, char * argv[]) {
     llama_backend_init();
 
     LlamaState llama = {};
-    if (!setup_llama(llama, model_path, n_ctx, n_batch)) {
+    if (!setup_llama(llama, model_path, gpu, n_ctx, n_batch)) {
         std::cerr << "Failed to load model from " << model_path << std::endl;
         return 1;
     }
