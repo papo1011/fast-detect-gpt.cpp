@@ -1,6 +1,7 @@
 #include "../include/detect.h"
 
 #include <cmath>
+#include <iostream>
 
 TokenStats compute_token_stats(const int             vocab_size,
                                const int             token_id,
@@ -70,4 +71,63 @@ double compute_discrepancy(const std::vector<float *> &     all_logits,
     }
 
     return (sum_ll - sum_mean) / std::sqrt(sum_var);
+}
+
+double analyze_text(const LlamaState & llama, const std::string & text, const int n_ctx) {
+    // clear cache
+    const auto memory = llama_get_memory(llama.ctx);
+    llama_memory_seq_rm(memory, -1, -1, -1);
+
+    // Input text tokenized
+    // size: input text length + 2 for BOS and EOS
+    std::vector<llama_token> tokens(text.length() + 2);
+    int n_tokens = llama_tokenize(llama.vocab, text.c_str(), static_cast<int>(text.length()), tokens.data(),
+                                  static_cast<int>(tokens.size()), true, false);
+
+    if (n_tokens < 0) {
+        tokens.resize(-n_tokens);
+        n_tokens = llama_tokenize(llama.vocab, text.c_str(), static_cast<int>(text.length()), tokens.data(),
+                                  static_cast<int>(tokens.size()), true, false);
+    }
+    tokens.resize(n_tokens);
+
+    if (n_tokens < 2) {
+        std::cerr << "Not enough tokens provided (minimum 2 tokens)" << std::endl;
+        return 1;
+    }
+
+    if (n_tokens > n_ctx) {
+        std::cerr << "Too many tokens provided: " << n_tokens << " (maximum " << n_ctx << ")" << std::endl;
+        return 1;
+    }
+
+    auto batch = llama_batch_init(n_tokens, 0, 1);
+    for (int i = 0; i < n_tokens; i++) {
+        batch.n_tokens     = n_tokens;
+        batch.token[i]     = tokens[i];
+        batch.pos[i]       = i;
+        batch.n_seq_id[i]  = 1;
+        batch.seq_id[i][0] = 0;
+        batch.logits[i]    = true;
+    }
+
+    std::cout << "Running inference on " << n_tokens << " tokens..." << std::endl;
+
+    if (llama_decode(llama.ctx, batch) != 0) {
+        std::cerr << "Inference failed" << std::endl;
+        llama_batch_free(batch);
+        return 0.0;
+    }
+
+    std::vector<float *> logits_ptrs;
+    logits_ptrs.reserve(n_tokens);  // reserve space avoiding reallocations
+    for (int i = 0; i < n_tokens; i++) {
+        logits_ptrs.push_back(llama_get_logits_ith(llama.ctx, i));
+    }
+
+    const int    vocab_size = llama_vocab_n_tokens(llama.vocab);
+    const double score      = compute_discrepancy(logits_ptrs, tokens, vocab_size);
+
+    llama_batch_free(batch);
+    return score;
 }

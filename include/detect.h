@@ -1,5 +1,7 @@
 #pragma once
+#include "./utils.h"
 #include "llama.h"
+
 #include <vector>
 
 struct TokenStats {
@@ -8,11 +10,10 @@ struct TokenStats {
     double variance;
 };
 
-TokenStats compute_token_stats(int vocab_size,
-                               int token_id,
-                               const float* logits,
-                               std::vector<double>& buffer);
+TokenStats compute_token_stats(int vocab_size, int token_id, const float * logits, std::vector<double> & buffer);
 
-double compute_discrepancy(const std::vector<float*>& all_logits,
-                           const std::vector<llama_token>& tokens,
-                           int vocab_size);
+double compute_discrepancy(const std::vector<float *> &     all_logits,
+                           const std::vector<llama_token> & tokens,
+                           int                              vocab_size);
+
+double analyze_text(const LlamaState & llama, const std::string & text, int n_ctx);
