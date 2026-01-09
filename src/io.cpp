@@ -66,6 +66,33 @@ std::pair<std::shared_ptr<arrow::Table>, std::vector<std::string>> load_parquet_
     return { table, texts };
 }
 
+std::shared_ptr<arrow::Table> load_parquet_table(const std::string & path) {
+    arrow::MemoryPool * pool = arrow::default_memory_pool();
+
+    auto result_open = arrow::io::ReadableFile::Open(path);
+    if (!result_open.ok()) {
+        std::cerr << "Error opening file: " << result_open.status().ToString() << std::endl;
+        return nullptr;
+    }
+    std::shared_ptr<arrow::io::ReadableFile> infile = *result_open;
+
+    auto open_file_result = parquet::arrow::OpenFile(infile, pool);
+    if (!open_file_result.ok()) {
+        std::cerr << "Error creating Parquet reader: " << open_file_result.status().ToString() << std::endl;
+        return nullptr;
+    }
+    std::unique_ptr<parquet::arrow::FileReader> reader = std::move(open_file_result.ValueOrDie());
+
+    std::shared_ptr<arrow::Table> table;
+    auto                          status = reader->ReadTable(&table);
+    if (!status.ok()) {
+        std::cerr << "Error reading table: " << status.ToString() << std::endl;
+        return nullptr;
+    }
+
+    return table;
+}
+
 bool save_parquet_with_scores(const std::string &           out_path,
                               std::shared_ptr<arrow::Table> table,
                               const std::vector<double> &   scores) {
