@@ -2,9 +2,12 @@
 
 #include "../include/io.h"
 
+#include <cmath>
+
 ThresholdResult find_optimal_threshold(std::shared_ptr<arrow::Table> table,
                                        const std::string &           score_col,
-                                       const std::string &           label_col) {
+                                       const std::string &           label_col,
+                                       double                        beta) {
     ThresholdResult best_res = { 0.0, 0.0, 0.0, 0.0, 0.0, true };
 
     auto scores = extract_column_as<double>(table, score_col);
@@ -23,8 +26,8 @@ ThresholdResult find_optimal_threshold(std::shared_ptr<arrow::Table> table,
     };
 
     std::vector<DataPoint> data(n);
+    int                    total_ai = 0;
 
-    int total_ai = 0;  // Total Positives (Label 1)
     for (size_t i = 0; i < n; ++i) {
         data[i] = { scores[i], labels[i] };
         if (labels[i] == 1) {
@@ -38,6 +41,8 @@ ThresholdResult find_optimal_threshold(std::shared_ptr<arrow::Table> table,
     int fp = 0;
     int fn = total_ai;
 
+    const double beta_sq = beta * beta;
+
     for (size_t i = 0; i < n; ++i) {
         if (data[i].label == 1) {
             tp++;
@@ -48,10 +53,14 @@ ThresholdResult find_optimal_threshold(std::shared_ptr<arrow::Table> table,
 
         const double precision = (tp + fp) > 0 ? (double) tp / (tp + fp) : 0.0;
         const double recall    = total_ai > 0 ? (double) tp / total_ai : 0.0;
-        const double f1        = (precision + recall) > 0 ? 2 * (precision * recall) / (precision + recall) : 0.0;
 
-        if (f1 > best_res.f1) {
-            best_res.f1              = f1;
+        double numerator   = (1 + beta_sq) * (precision * recall);
+        double denominator = (beta_sq * precision) + recall;
+
+        const double f_score = (denominator > 0) ? (numerator / denominator) : 0.0;
+
+        if (f_score > best_res.f_score) {
+            best_res.f_score         = f_score;
             best_res.precision       = precision;
             best_res.recall          = recall;
             best_res.threshold       = data[i].score;
