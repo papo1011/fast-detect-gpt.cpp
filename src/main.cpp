@@ -1,5 +1,6 @@
 #include "../include/detect.h"
 #include "../include/io.h"
+#include "../include/threshold.h"
 #include "../include/utils.h"
 
 #include <argparse/argparse.hpp>
@@ -15,16 +16,23 @@ int main(const int argc, char * argv[]) {
 
     program.add_argument("--verbose").help("Verbosity level").default_value(false).implicit_value(true);
     program.add_argument("--gpu").help("Enable GPU acceleration").default_value(false).implicit_value(true);
-    program.add_argument("-m", "--model").help("Path to the GGUF model file").required();
+    program.add_argument("-m", "--model")
+        .help("Path to the GGUF model file")
+        .default_value("../models/tiiuae-falcon-7b-instruct-Q5_K_M.gguf");
     program.add_argument("-f", "--file").help("Path to the input file (txt or parquet)").required();
     program.add_argument("-c", "--ctx").help("Size of the prompt context").default_value(4096).scan<'i', int>();
     program.add_argument("-b", "--batch").help("Logical max batch size").default_value(4096).scan<'i', int>();
-
     program.add_argument("--col").help("Column name to analyze, Parquet only").default_value(std::string("text"));
-
     program.add_argument("-o", "--output")
         .help("Output file path (Parquet only)")
         .default_value(std::string("output_scored.parquet"));
+    program.add_argument("--find-threshold")
+        .help("Calculate optimal threshold from a scored parquet file")
+        .default_value(false)
+        .implicit_value(true);
+    program.add_argument("--label-col")
+        .help("Name of the label column (0=Human, 1=AI)")
+        .default_value(std::string("label"));
 
     try {
         program.parse_args(argc, argv);
@@ -42,6 +50,36 @@ int main(const int argc, char * argv[]) {
     const auto output_file = program.get<std::string>("--output");
     const int  n_ctx       = program.get<int>("--ctx");
     const int  n_batch     = program.get<int>("--batch");
+    const bool find_mode   = program.get<bool>("--find-threshold");
+    const auto label_col   = program.get<std::string>("--label-col");
+
+    if (find_mode) {
+        std::cout << "Running in Threshold Optimization Mode!" << std::endl;
+        std::shared_ptr<arrow::Table> table = load_parquet_table(input_file);
+
+        if (!table) {
+            std::cerr << "Failed to load parquet file." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Finding optimal threshold optimizing F1-Score" << std::endl;
+
+        ThresholdResult res = find_optimal_threshold(table, "discrepancy", label_col);
+
+        if (res.f1 == 0.0) {
+            std::cerr << "Failed to find a valid threshold (Data mismatch?)." << std::endl;
+        } else {
+            std::cout << "\n--- RESULTS ---" << std::endl;
+            std::cout << "Optimal Threshold: " << res.threshold << std::endl;
+            std::cout << "Max F1 Score:      " << res.f1 << std::endl;
+            std::cout << "Precision:         " << res.precision << std::endl;
+            std::cout << "Recall:            " << res.recall << std::endl;
+            std::cout << "Direction:         "
+                      << (res.is_lower_better ? "Score < Threshold => AI" : "Score > Threshold => AI") << std::endl;
+            std::cout << "-----------------" << std::endl;
+        }
+        return 0;
+    }
 
     if (!std::filesystem::exists(input_file) || !std::filesystem::is_regular_file(input_file)) {
         std::cerr << "Input must be an existing regular file: " << input_file << std::endl;
