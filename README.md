@@ -74,7 +74,7 @@ cmake --build ./build --target fast-detect-gpt -j 6
   ```
 
 ### Understanding the output
-The output will be a discrepancy score for each input text, the higher the score the more likely it is that the text is human written. You can set a threshold to classify the text as human or AI written, for example a threshold of 0 means that if the score is above 0 it is classified as human written, otherwise as AI written.
+The output will be a discrepancy score for each input text, the higher the score the more likely it is that the text is human written.
 
 You can compute the threshold that maximizes the F-Beta score on your train dataset
 using this script:
