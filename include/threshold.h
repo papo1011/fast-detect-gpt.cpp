@@ -8,7 +8,7 @@
 
 struct ThresholdResult {
     double threshold;
-    double f1;
+    double f_score;
     double precision;
     double recall;
     double accuracy;
@@ -17,4 +17,5 @@ struct ThresholdResult {
 
 ThresholdResult find_optimal_threshold(std::shared_ptr<arrow::Table> table,
                                        const std::string &           score_col,
-                                       const std::string &           label_col);
+                                       const std::string &           label_col,
+                                       double                        beta);

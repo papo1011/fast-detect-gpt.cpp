@@ -33,6 +33,10 @@ int main(const int argc, char * argv[]) {
     program.add_argument("--label-col")
         .help("Name of the label column (0=Human, 1=AI)")
         .default_value(std::string("label"));
+    program.add_argument("--beta")
+        .help("Beta value for F-score optimization (ex 0.5 = prioritize precision, 2.0 = prioritize recall)")
+        .default_value(1.0)
+        .scan<'g', double>();
 
     try {
         program.parse_args(argc, argv);
@@ -42,16 +46,17 @@ int main(const int argc, char * argv[]) {
         return 1;
     }
 
-    const bool verbose     = program.get<bool>("--verbose");
-    const bool gpu         = program.get<bool>("--gpu");
-    const auto model_path  = program.get<std::string>("--model");
-    const auto input_file  = program.get<std::string>("--file");
-    const auto col_name    = program.get<std::string>("--col");
-    const auto output_file = program.get<std::string>("--output");
-    const int  n_ctx       = program.get<int>("--ctx");
-    const int  n_batch     = program.get<int>("--batch");
-    const bool find_mode   = program.get<bool>("--find-threshold");
-    const auto label_col   = program.get<std::string>("--label-col");
+    const bool   verbose     = program.get<bool>("--verbose");
+    const bool   gpu         = program.get<bool>("--gpu");
+    const auto   model_path  = program.get<std::string>("--model");
+    const auto   input_file  = program.get<std::string>("--file");
+    const auto   col_name    = program.get<std::string>("--col");
+    const auto   output_file = program.get<std::string>("--output");
+    const int    n_ctx       = program.get<int>("--ctx");
+    const int    n_batch     = program.get<int>("--batch");
+    const bool   find_mode   = program.get<bool>("--find-threshold");
+    const auto   label_col   = program.get<std::string>("--label-col");
+    const double beta        = program.get<double>("--beta");
 
     if (find_mode) {
         std::cout << "Running in Threshold Optimization Mode!" << std::endl;
@@ -62,16 +67,16 @@ int main(const int argc, char * argv[]) {
             return 1;
         }
 
-        std::cout << "Finding optimal threshold optimizing F1-Score" << std::endl;
+        std::cout << "Finding optimal threshold optimizing F-Beta Score" << std::endl;
 
-        ThresholdResult res = find_optimal_threshold(table, "discrepancy", label_col);
+        ThresholdResult res = find_optimal_threshold(table, "discrepancy", label_col, beta);
 
-        if (res.f1 == 0.0) {
-            std::cerr << "Failed to find a valid threshold (Data mismatch?)." << std::endl;
+        if (res.f_score == 0.0) {
+            std::cerr << "Failed to find a valid threshold" << std::endl;
         } else {
-            std::cout << "\n--- RESULTS ---" << std::endl;
+            std::cout << "\n---- RESULTS ----" << std::endl;
             std::cout << "Optimal Threshold: " << res.threshold << std::endl;
-            std::cout << "Max F1 Score:      " << res.f1 << std::endl;
+            std::cout << "Max F-Beta Score:  " << res.f_score << std::endl;
             std::cout << "Precision:         " << res.precision << std::endl;
             std::cout << "Recall:            " << res.recall << std::endl;
             std::cout << "Direction:         "
